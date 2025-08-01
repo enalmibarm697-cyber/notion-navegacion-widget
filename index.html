@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navegación por Horizonte</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #191919;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 200px 1fr 280px;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .image-sidebar {
+            background: #252525;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #3f3f3f;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .image-frame {
+            width: 100%;
+            height: 100%;
+            border: 2px dashed #5a5a5a;
+            border-radius: 8px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #9b9a97;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .image-frame:hover {
+            border-color: #e8b4c8;
+            background-color: #252525;
+        }
+
+        .image-frame.has-image {
+            border: none;
+        }
+
+        .image-frame.has-image::before {
+            display: none;
+        }
+
+        .image-frame::before {
+            content: "Imagen\\A del mes\\A\\A📸\\A\\AArrastra o haz clic";
+            white-space: pre;
+            line-height: 1.4;
+        }
+
+        .main-content {
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #3f3f3f;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-left: 8px;
+            color: #ffffff;
+        }
+
+        .sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 80px);
+        }
+
+        .section {
+            background: #2f2f2f;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #3f3f3f;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #404040;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-title-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-left: 8px;
+            color: #ffffff;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #1a1a1a;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .view-btn {
+            background: transparent;
+            border: none;
+            color: #9b9a97;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .view-btn.active {
+            background: #4a9eff;
+            color: #ffffff;
+        }
+
+        .section-subtitle {
+            font-style: italic;
+            color: #9b9a97;
+            font-size: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content-area::-webkit-scrollbar-track {
+            background: #252525;
+            border-radius: 3px;
+        }
+
+        .content-area::-webkit-scrollbar-thumb {
+            background: #404040;
+            border-radius: 3px;
+        }
+
+        /* VISTA GALERÍA */
+        .gallery-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .idea-card {
+            background: #252525;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #3f3f3f;
+            position: relative;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .idea-card:hover {
+            transform: translateY(-2px);
+            background: #2a2a2a;
+        }
+
+        .bottle-image {
+            width: 50px;
+            height: 60px;
+            background: linear-gradient(135deg, #4a9eff 0%, #0066cc 100%);
+            border-radius: 20px 20px 5px 5px;
+            margin-bottom: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120"><defs><linearGradient id="bottle" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%234a9eff;stop-opacity:1" /><stop offset="100%" style="stop-color:%230066cc;stop-opacity:1" /></linearGradient></defs><path d="M30 10 L70 10 L70 20 L65 25 L65 110 L35 110 L35 25 Z" fill="url(%23bottle)" stroke="%23003d7a" stroke-width="2"/><rect x="25" y="5" width="50" height="10" rx="5" fill="%23333"/><circle cx="50" cy="60" r="15" fill="%23ffffff" opacity="0.3"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .bottle-image::before {
+            content: '💡';
+            font-size: 16px;
+            position: absolute;
+            z-index: 1;
+        }
+
+        .idea-title {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.3;
+            color: #ffffff;
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-progress {
+            width: 100%;
+            height: 3px;
+            background: #3f3f3f;
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .card-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a9eff, #0066cc);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* VISTA TABLA */
+        .table-view {
+            display: none;
+        }
+
+        .table-view.active {
+            display: block;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 100px;
+            gap: 12px;
+            padding: 8px 12px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #9b9a97;
+            margin-bottom: 8px;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 100px;
+            gap: 12px;
+            padding: 10px 12px;
+            background: #252525;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            align-items: center;
+            transition: background 0.2s ease;
+        }
+
+        .table-row:hover {
+            background: #2a2a2a;
+        }
+
+        .task-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .task-status {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status-sin-empezar { background: #3f3f3f; color: #9b9a97; }
+        .status-en-progreso { background: #4a9eff20; color: #4a9eff; }
+        .status-listo { background: #00cc4420; color: #00cc44; }
+        .status-gone { background: #ff666620; color: #ff6666; }
+
+        .task-progress {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: #3f3f3f;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a9eff, #0066cc);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 10px;
+            color: #9b9a97;
+            min-width: 35px;
+        }
+
+        /* ESTILOS POR SECCIÓN */
+        .maniobras-today .bottle-image {
+            background: linear-gradient(135deg, #ffd89b 0%, #ffcb74 100%);
+        }
+
+        .corrientes-semana .bottle-image {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+
+        .current-section {
+            border: 2px solid #4a9eff;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            background: #252525;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #3f3f3f;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #404040;
+            border-radius: 3px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-title span {
+            margin-right: 8px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .filter-chip {
+            background: #3f3f3f;
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-chip:hover {
+            background: #4a9eff;
+        }
+
+        .filter-chip.active {
+            background: #4a9eff;
+        }
+
+        .quick-item {
+            background: #2f2f2f;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #ffffff;
+            border-left: 3px solid #4a9eff;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .quick-item:hover {
+            background: #353535;
+        }
+
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 11px;
+            color: #9b9a97;
+        }
+
+        .stat-count {
+            background: #4a9eff;
+            color: #ffffff;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="image-sidebar">
+            <div class="image-frame" id="month-image"></div>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <span style="font-size: 20px;">📋</span>
+                <h1>NAVEGACIÓN POR HORIZONTE</h1>
+            </div>
+
+            <div class="sections">
+                <!-- MANIOBRAS DE HOY -->
+                <div class="section current-section maniobras-today">
+                    <div class="section-header">
+                        <div class="section-title-container">
+                            <span>⚡</span>
+                            <div class="section-title">Maniobras de Hoy</div>
+                        </div>
+                        <div class="view-toggle">
+                            <button class="view-btn active" onclick="toggleView('today', 'gallery')">🖼️</button>
+                            <button class="view-btn" onclick="toggleView('today', 'table')">📋</button>
+                        </div>
+                    </div>
+                    
+                    <div class="content-area">
+                        <!-- Vista Galería -->
+                        <div class="gallery-view active" id="today-gallery">
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Trackear mi período menstrual</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 50%"></div>
+                                </div>
+                            </div>
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Hacer calendario escolar</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 25%"></div>
+                                </div>
+                            </div>
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Hacer horario semanal escolar</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Apuntar datos de interés ESMAR</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vista Tabla -->
+                        <div class="table-view" id="today-table">
+                            <div class="table-header">
+                                <div>Nombre</div>
+                                <div>Estado</div>
+                                <div>Progreso</div>
+                            </div>
+                            <div class="table-row">
+                                <div class="task-name">Trackear mi período menstrual</div>
+                                <div class="task-status status-en-progreso">En progreso</div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 50%"></div>
+                                    </div>
+                                    <div class="progress-text">50%</div>
+                                </div>
+                            </div>
+                            <div class="table-row">
+                                <div class="task-name">Hacer calendario escolar</div>
+                                <div class="task-status status-en-progreso">En progreso</div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 25%"></div>
+                                    </div>
+                                    <div class="progress-text">25%</div>
+                                </div>
+                            </div>
+                            <div class="table-row">
+                                <div class="task-name">Hacer horario semanal escolar</div>
+                                <div class="task-status status-sin-empezar">Sin empezar</div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <div class="progress-text">0%</div>
+                                </div>
+                            </div>
+                            <div class="table-row">
+                                <div class="task-name">Apuntar datos de interés ESMAR</div>
+                                <div class="task-status status-sin-empezar">Sin empezar</div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <div class="progress-text">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CORRIENTES DE LA SEMANA -->
+                <div class="section corrientes-semana">
+                    <div class="section-header">
+                        <div class="section-title-container">
+                            <span>🌊</span>
+                            <div class="section-title">Corrientes de la Semana</div>
+                        </div>
+                        <div class="view-toggle">
+                            <button class="view-btn active" onclick="toggleView('week', 'gallery')">🖼️</button>
+                            <button class="view-btn" onclick="toggleView('week', 'table')">📋</button>
+                        </div>
+                    </div>
+                    <div class="section-subtitle">"Observa las corrientes antes de maniobrar"</div>
+                    
+                    <div class="content-area">
+                        <!-- Vista Galería -->
+                        <div class="gallery-view active" id="week-gallery">
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Piano Acompañamientos</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 67%"></div>
+                                </div>
+                            </div>
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Organizar el comienzo de la universidad</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 50%"></div>
+                                </div>
+                            </div>
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Apuntar lo que he aprendido en el fisio</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 33%"></div>
+                                </div>
+                            </div>
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Breath Control</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 25%"></div>
+                                </div>
+                            </div>
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Ir a buscar el micrófono al despacho de Madi</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Gestionar Beca MEC</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Hablar con talleres de metalurgia</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="idea-card">
+                                <div class="bottle-image"></div>
+                                <div class="idea-title">Pasar tablero casa a notion</div>
+                                <div class="card-progress">
+                                    <div class="card-progress-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vista Tabla -->
+                        <div class="table-view" id="week-table">
+                            <div class="table-header">
+                                <div>Nombre</div>
+                                <div>Estado</div>
+                                <div>Progreso</div>
+                            </div>
+                            <div class="table-row">
+                                <div class="task-name">Piano Acompañamientos</div>
+                                <div class="task-status status-en-progreso">En progreso</div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 67%"></div>
+                                    </div>
+                                    <div class="progress-text">67%</div>
+                                </div>
+                            </div>
+                            <div class="table-row">
+                                <div class="task-name">Organizar el comienzo de la universidad</div>
+                                <div class="task-status status-en-progreso">En progreso</div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 50%"></div>
+                                    </div>
+                                    <div class="progress-text">50%</div>
+                                </div>
+                            </div>
+                            <div class="table-row">
+                                <div class="task-name">Apuntar lo que he aprendido en el fisio</div>
+                                <div class="task-status status-en-progreso">En progreso</div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 33%"></div>
+                                    </div>
+                                    <div class="progress-text">33%</div>
+                                </div>
+                            </div>
+                            <div class="table-row">
+                                <div class="task-name">Breath Control</div>
+                                <div class="task-status status-en-progreso">En progreso</div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 25%"></div>
+                                    </div>
+                                    <div class="progress-text">25%</div>
+                                </div>
+                            </div>
+                            <div class="table-row">
+                                <div class="task-name">Ir a buscar el micrófono al despacho de Madi</div>
+                                <div class="task-status status-sin-empezar">Sin empezar</div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <div class="progress-text">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>🎯</span>
+                    Filtros por Contexto
+                </div>
+                <div class="filter-group">
+                    <div class="filter-chip active">Vida</div>
+                    <div class="filter-chip">Estudios</div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>📊</span>
+                    Por Estado
+                </div>
+                <div class="stats-item">
+                    <span>Sin empezar</span>
+                    <span class="stat-count">15</span>
+                </div>
+                <div class="stats-item">
+                    <span>En progreso</span>
+                    <span class="stat-count">8</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>⛵</span>
+                    Travesías Vinculadas
+                </div>
+                <div class="quick-item">Organizar el comienzo de la universidad</div>
+                <div class="quick-item">Conseguir un micro</div>
+                <div class="quick-item">Escritorio elevable</div>
+                <div class="quick-item">Hablar con talleres de metalurgia</div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">
+                    <span>⏰</span>
+                    Gestión de Tiempo
+                </div>
+                <div class="stats-item">
+                    <span>Maniobras de Hoy</span>
+                    <span class="stat-count">4</span>
+                </div>
+                <div class="stats-item">
+                    <span>Esta Semana</span>
+                    <span class="stat-count">19</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <script>
+        function toggleView(section, viewType) {
+            // Actualizar botones solo del section actual
+            const sectionElement = document.querySelector(`.${section === 'today' ? 'maniobras-today' : 'corrientes-semana'}`);
+            const toggleButtons = sectionElement.querySelectorAll('.view-btn');
+            toggleButtons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Cambiar vistas
+            const galleryView = document.getElementById(`${section}-gallery`);
+            const tableView = document.getElementById(`${section}-table`);
+
+            if (viewType === 'gallery') {
+                galleryView.style.display = 'grid';
+                tableView.style.display = 'none';
+                galleryView.classList.add('active');
+                tableView.classList.remove('active');
+            } else {
+                galleryView.style.display = 'none';
+                tableView.style.display = 'block';
+                galleryView.classList.remove('active');
+                tableView.classList.add('active');
+            }
+        }
+
+        // Filtros interactivos
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                this.classList.toggle('active');
+                // Aquí iría la lógica de filtrado
+            });
+        });
+
+        // Drag & Drop para imagen del mes
+        const imageFrame = document.getElementById('month-image');
+        
+        imageFrame.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#e8b4c8';
+            this.style.backgroundColor = '#252525';
+        });
+
+        imageFrame.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#5a5a5a';
+            this.style.backgroundColor = '#1a1a1a';
+        });
+
+        imageFrame.addEventListener('drop', function(e) {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imageFrame.style.backgroundImage = `url(${e.target.result})`;
+                        imageFrame.classList.add('has-image');
+                        imageFrame.style.borderColor = 'transparent';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        // Click para seleccionar archivo
+        imageFrame.addEventListener('click', function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imageFrame.style.backgroundImage = `url(${e.target.result})`;
+                        imageFrame.classList.add('has-image');
+                        imageFrame.style.borderColor = 'transparent';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        });
+    </script>
+</body>
+</html>
